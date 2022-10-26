@@ -39,7 +39,7 @@ const StyledApp = styled.div`
 // =============================================================================
 
 // alternatively, use 'https://solana-api.projectserum.com' for demo purposes only
-const NETWORK = clusterApiUrl('mainnet-beta');
+const NETWORK = clusterApiUrl('testnet');
 const provider = getProvider();
 const connection = new Connection(NETWORK);
 const message = 'To avoid digital dognappers, sign below to authenticate with CryptoCorgis.';
@@ -215,8 +215,8 @@ const useProps = (): Props => {
 
     try {
       const transactions = [
-        await createTransferTransaction(provider.publicKey, connection),
-        await createTransferTransaction(provider.publicKey, connection),
+        await createTransferTransaction(provider.publicKey, connection, 101),
+        await createTransferTransaction(provider.publicKey, connection, 202),
       ];
       createLog({
         status: 'info',
@@ -224,10 +224,15 @@ const useProps = (): Props => {
         message: `Requesting signature for: ${JSON.stringify(transactions)}`,
       });
       const signedTransactions = await signAllTransactions(provider, transactions[0], transactions[1]);
+      const hashes: string[] = [];
+      for (let i = 0; i < signedTransactions.length; i++) {
+        const hash = await connection.sendRawTransaction(signedTransactions[i].serialize());
+        hashes.push(hash);
+      }
       createLog({
         status: 'success',
         method: 'signAllTransactions',
-        message: `Transactions signed: ${JSON.stringify(signedTransactions)}`,
+        message: `Transactions signed: ${JSON.stringify(signedTransactions)}\nhashes: ${hashes}`,
       });
     } catch (error) {
       createLog({
